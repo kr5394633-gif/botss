@@ -3,10 +3,19 @@ const ffmpegStatic = require('ffmpeg-static');
 process.env.PATH = require('path').dirname(ffmpegStatic) + require('path').delimiter + process.env.PATH;
 
 const net = require('net');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const { Client, GatewayIntentBits, ChannelType } = require("discord.js");
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, entersState, AudioPlayerStatus, StreamType, VoiceConnectionStatus } = require("@discordjs/voice");
 const { FFmpeg } = require("prism-media");
 const youtubedl = require("youtube-dl-exec");
+
+let youtubeCookieFile = null;
+if (process.env.YOUTUBE_COOKIES_B64) {
+    youtubeCookieFile = path.join(os.tmpdir(), `youtube-cookies-${process.pid}.txt`);
+    fs.writeFileSync(youtubeCookieFile, Buffer.from(process.env.YOUTUBE_COOKIES_B64, 'base64'), { mode: 0o600 });
+}
 
 // ─── BOT TOKEN FROM ENVIRONMENT ───
 const BOT_TOKEN = process.env.BOT_TOKEN;
@@ -186,7 +195,8 @@ async function getAudioUrl(url) {
                 noPlaylist: true,
                 format: 'bestaudio[ext=webm]/bestaudio/best',
                 noWarnings: true,
-                extractorArgs: 'youtube:player_client=android,web_safari'
+                extractorArgs: 'youtube:player_client=android,web_safari',
+                ...(youtubeCookieFile ? { cookies: youtubeCookieFile } : {})
             });
             console.log(`[BOT ${BOT_ID}] YouTube fetch success: ${result.title}`);
             return {
