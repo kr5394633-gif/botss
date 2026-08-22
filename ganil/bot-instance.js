@@ -11,6 +11,15 @@ const { joinVoiceChannel, createAudioPlayer, createAudioResource, entersState, A
 const { FFmpeg } = require("prism-media");
 const youtubedl = require("youtube-dl-exec");
 
+function withTimeout(promise, milliseconds) {
+    return Promise.race([
+        promise,
+        new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('YouTube request timed out. Add valid YOUTUBE_COOKIES_B64 in Railway or use a direct audio URL.')), milliseconds);
+        })
+    ]);
+}
+
 let youtubeCookieFile = null;
 if (process.env.YOUTUBE_COOKIES_B64) {
     youtubeCookieFile = path.join(os.tmpdir(), `youtube-cookies-${process.pid}.txt`);
@@ -197,7 +206,7 @@ async function getAudioUrl(url) {
     if (isYouTubeUrl(url)) {
         try {
             console.log(`[BOT ${BOT_ID}] Fetching YouTube: ${url}`);
-            const result = await youtubedl(url, {
+            const result = await withTimeout(youtubedl(url, {
                 dumpSingleJson: true,
                 noPlaylist: true,
                 format: 'bestaudio[ext=webm]/bestaudio/best',
@@ -207,7 +216,7 @@ async function getAudioUrl(url) {
             }, {
                 timeout: 60000,
                 killSignal: 'SIGKILL'
-            });
+            }), 65000);
             console.log(`[BOT ${BOT_ID}] YouTube fetch success: ${result.title}`);
             return {
                 url: result.url,
