@@ -204,6 +204,9 @@ async function getAudioUrl(url) {
                 noWarnings: true,
                 extractorArgs: 'youtube:player_client=android,web_safari',
                 ...(youtubeCookieFile ? { cookies: youtubeCookieFile } : {})
+            }, {
+                timeout: 60000,
+                killSignal: 'SIGKILL'
             });
             console.log(`[BOT ${BOT_ID}] YouTube fetch success: ${result.title}`);
             return {
