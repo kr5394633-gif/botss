@@ -72,6 +72,9 @@ class SyncCoordinator {
                 startTime: this.startTime
             });
         }
+        if (message.type === 'CONTROL') {
+            this.broadcastToAll(message);
+        }
     }
 
     broadcastToAll(message) {

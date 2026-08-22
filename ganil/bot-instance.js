@@ -57,6 +57,25 @@ function sendSyncMessage(message) {
 }
 
 async function handleSyncMessage(message) {
+    if (message.type === 'CONTROL') {
+        if (message.command === 'loop') {
+            loopMode = message.enabled;
+        }
+        if (message.command === 'volume') {
+            currentVolumeMultiplier = message.value / 100;
+            if (activeResource && activeResource.volume) {
+                activeResource.volume.setVolume(currentVolumeMultiplier);
+            }
+        }
+        if (message.command === 'blast') {
+            blastMode = message.enabled;
+            pungiMode = false;
+            if (currentUrl && currentConnection) {
+                await playAudio(currentUrl, currentTitle, isYouTubeUrl(currentUrl));
+            }
+        }
+        return;
+    }
     if (message.type === 'PLAY_SYNC') {
         console.log(`[BOT ${BOT_ID}] [SYNC] Received play sync command: ${message.title}`);
         if (message.channelId) {
@@ -329,24 +348,30 @@ client.on("messageCreate", async (message) => {
     try {
         // LOOP
         if (command === "loop") {
+            if (BOT_ID !== "1") return;
             loopMode = !loopMode;
+            sendSyncMessage({ type: 'CONTROL', command: 'loop', enabled: loopMode });
             return message.reply(`[BOT ${BOT_ID}] Loop: ${loopMode ? "ON" : "OFF"}`);
         }
 
         // BLAST
         if (command === "blast") {
+            if (BOT_ID !== "1") return;
             blastMode = !blastMode;
             pungiMode = false;
+            sendSyncMessage({ type: 'CONTROL', command: 'blast', enabled: blastMode });
             return message.reply(`[BOT ${BOT_ID}] Blast Mode: ${blastMode ? "🔥 ON" : "OFF"}`);
         }
 
         // VOLUME
         if (command === "volume") {
+            if (BOT_ID !== "1") return;
             const vol = parseInt(args[0], 10);
             if (isNaN(vol) || vol < 1 || vol > 10000) {
                 return message.reply("[ERROR] Volume must be 1-10000");
             }
             currentVolumeMultiplier = vol / 100;
+            sendSyncMessage({ type: 'CONTROL', command: 'volume', value: vol });
             return message.reply(`[BOT ${BOT_ID}] Volume: ${vol}%`);
         }
 
