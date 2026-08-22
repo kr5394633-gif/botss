@@ -16,7 +16,7 @@
     "youtube-dl-exec": "^3.1.12"
   },
   "engines": {
-    "node": "16.x"
+    "node": ">=22.12.0"
   },
   "name": "m-selfbot",
   "version": "1.0.0",

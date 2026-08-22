@@ -164,7 +164,14 @@ If Railway is configured with **Root Directory** set to `/ganil`, use this start
 npm start
 ```
 
-The `ganil/package.json` file is configured to start `start.js` in that layout. Add `BOT_TOKENS` (comma-separated) or `BOT_TOKEN` under Railway Variables, then redeploy.
+The `ganil/package.json` file is configured to start `start.js` in that layout. Add these Railway Variables, then redeploy:
+
+```text
+BOT_TOKENS=token1,token2,token3
+YOUTUBE_DL_SKIP_PYTHON_CHECK=1
+```
+
+Use `BOT_TOKEN` instead of `BOT_TOKENS` for one bot. The skip variable is required because the Railway image does not include Python, while `youtube-dl-exec` otherwise stops the dependency install.
 
 ### 1. Start with PM2
 ```bash
