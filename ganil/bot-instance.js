@@ -80,6 +80,19 @@ async function handleSyncMessage(message) {
                 activeResource.volume.setVolume(blastVolume);
             }
         }
+        if (message.command === 'pungi') {
+            pungiMode = message.enabled;
+            blastMode = false;
+            if (currentUrl && currentConnection) {
+                await playAudio(currentUrl, currentTitle, isYouTubeUrl(currentUrl));
+            }
+        }
+        if (message.command === 'pungiset') {
+            pungiIntensity = message.value;
+            if (pungiMode && activeResource && activeResource.volume) {
+                activeResource.volume.setVolume(Math.min(pungiIntensity, 100));
+            }
+        }
         return;
     }
     if (message.type === 'PLAY_SYNC') {
@@ -381,6 +394,25 @@ client.on("messageCreate", async (message) => {
                 activeResource.volume.setVolume(blastVolume);
             }
             return message.reply(`[BOT ${BOT_ID}] Blast volume: ${blastValue}%`);
+        }
+
+        if (command === "pungi") {
+            if (BOT_ID !== "1") return;
+            pungiMode = !pungiMode;
+            blastMode = false;
+            sendSyncMessage({ type: 'CONTROL', command: 'pungi', enabled: pungiMode });
+            return message.reply(`[BOT ${BOT_ID}] Pungi Mode: ${pungiMode ? "ON" : "OFF"}`);
+        }
+
+        if (command === "pungiset") {
+            if (BOT_ID !== "1") return;
+            const intensity = parseFloat(args[0]);
+            if (isNaN(intensity) || intensity < 1 || intensity > 200) {
+                return message.reply("[ERROR] Pungi intensity must be 1-200");
+            }
+            pungiIntensity = intensity;
+            sendSyncMessage({ type: 'CONTROL', command: 'pungiset', value: intensity });
+            return message.reply(`[BOT ${BOT_ID}] Pungi intensity: ${intensity}x`);
         }
 
         // VOLUME
