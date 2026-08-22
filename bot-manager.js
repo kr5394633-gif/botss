@@ -42,10 +42,15 @@ function getBotTokens() {
     }
 
     try {
-        const trimmedTokens = configuredTokens.trim();
+        const trimmedTokens = configuredTokens
+            .trim()
+            .replace(/^BOT_TOKENS?\s*=\s*/i, '');
         const tokens = trimmedTokens.startsWith('[')
             ? JSON.parse(trimmedTokens)
-            : trimmedTokens.split(',').map(token => token.trim().replace(/^['"]|['"]$/g, ''));
+            : trimmedTokens
+                .split(/[\s,]+/)
+                .map(token => token.trim().replace(/^['"]|['"]$/g, ''))
+                .filter(Boolean);
         if (!Array.isArray(tokens) || tokens.length === 0 || tokens.some(token => !token)) {
             throw new Error('Token list is empty or invalid');
         }
