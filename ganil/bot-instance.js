@@ -3,6 +3,7 @@ const ffmpegStatic = require('ffmpeg-static');
 process.env.PATH = require('path').dirname(ffmpegStatic) + require('path').delimiter + process.env.PATH;
 
 const net = require('net');
+const { Readable } = require('stream');
 const { Client, GatewayIntentBits, ChannelType } = require("discord.js");
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, StreamType, VoiceConnectionStatus } = require("@discordjs/voice");
 const { FFmpeg } = require("prism-media");
@@ -65,7 +66,7 @@ async function handleSyncMessage(message) {
             url: message.url,
             title: message.title,
             startTime: message.startTime,
-            resource: createAudioResourceFromUrl(message.url, isBassboosted, blastMode, pungiMode)
+            resource: await createAudioResourceFromUrl(message.url, isBassboosted, blastMode, pungiMode)
         };
 
         // Calculate delay
@@ -158,7 +159,7 @@ async function getAudioUrl(url) {
     }
 }
 
-function createAudioResourceFromUrl(audioUrl, bassboosted, blast = false, pungi = false) {
+async function createAudioResourceFromUrl(audioUrl, bassboosted, blast = false, pungi = false) {
     let finalStream = audioUrl;
     let audioFilters = [];
 
@@ -201,6 +202,14 @@ function createAudioResourceFromUrl(audioUrl, bassboosted, blast = false, pungi 
         finalStream = ffmpeg;
     }
 
+    if (!bassboosted && !blast && !pungi) {
+        const response = await fetch(audioUrl);
+        if (!response.ok || !response.body) {
+            throw new Error(`Audio stream request failed with status ${response.status}`);
+        }
+        finalStream = Readable.fromWeb(response.body);
+    }
+
     const resource = createAudioResource(finalStream, {
         inputType: (bassboosted || blast || pungi) ? StreamType.Raw : StreamType.Arbitrary,
         inlineVolume: true
@@ -216,7 +225,7 @@ async function playAudio(url, title, isYouTube) {
     
     currentUrl = url;
     currentTitle = title;
-    activeResource = createAudioResourceFromUrl(url, isBassboosted, blastMode, pungiMode);
+    activeResource = await createAudioResourceFromUrl(url, isBassboosted, blastMode, pungiMode);
     audioPlayer.play(activeResource);
     currentConnection.subscribe(audioPlayer);
 
