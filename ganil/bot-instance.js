@@ -3,7 +3,6 @@ const ffmpegStatic = require('ffmpeg-static');
 process.env.PATH = require('path').dirname(ffmpegStatic) + require('path').delimiter + process.env.PATH;
 
 const net = require('net');
-const { Readable } = require('stream');
 const { Client, GatewayIntentBits, ChannelType } = require("discord.js");
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, entersState, AudioPlayerStatus, StreamType, VoiceConnectionStatus } = require("@discordjs/voice");
 const { FFmpeg } = require("prism-media");
@@ -233,35 +232,25 @@ async function createAudioResourceFromUrl(audioUrl, bassboosted, blast = false, 
 
     const filterString = audioFilters.join(",");
 
-    if (bassboosted || blast || pungi) {
-        const ffmpeg = new FFmpeg({
-            args: [
-                "-reconnect", "1",
-                "-reconnect_streamed", "1",
-                "-reconnect_delay_max", "5",
-                "-analyzeduration", "0",
-                "-loglevel", "error",
-                "-i", audioUrl,
-                "-af", filterString,
-                "-f", "s16le",
-                "-ar", "48000",
-                "-ac", "2"
-            ],
-            shell: false
-        });
-        finalStream = ffmpeg;
-    }
-
-    if (!bassboosted && !blast && !pungi) {
-        const response = await fetch(audioUrl);
-        if (!response.ok || !response.body) {
-            throw new Error(`Audio stream request failed with status ${response.status}`);
-        }
-        finalStream = Readable.fromWeb(response.body);
-    }
+    const ffmpeg = new FFmpeg({
+        args: [
+            "-reconnect", "1",
+            "-reconnect_streamed", "1",
+            "-reconnect_delay_max", "5",
+            "-analyzeduration", "0",
+            "-loglevel", "error",
+            "-i", audioUrl,
+            "-af", filterString,
+            "-f", "s16le",
+            "-ar", "48000",
+            "-ac", "2"
+        ],
+        shell: false
+    });
+    finalStream = ffmpeg;
 
     const resource = createAudioResource(finalStream, {
-        inputType: (bassboosted || blast || pungi) ? StreamType.Raw : StreamType.Arbitrary,
+        inputType: StreamType.Raw,
         inlineVolume: true
     });
 
