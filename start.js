@@ -11,5 +11,4 @@ process.env.PATH = ffmpegDir + path.delimiter + process.env.PATH;
 console.log('[BOT SETUP] FFmpeg path set:', ffmpegDir);
 console.log('[BOT SETUP] PATH:', process.env.PATH.substring(0, 100));
 
-// NOW require the bot manager
-require('./bot-manager.js');
+require('./ganil/start.js');

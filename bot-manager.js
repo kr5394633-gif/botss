@@ -42,9 +42,10 @@ function getBotTokens() {
     }
 
     try {
-        const tokens = configuredTokens.trim().startsWith('[')
-            ? JSON.parse(configuredTokens)
-            : configuredTokens.split(',').map(token => token.trim());
+        const trimmedTokens = configuredTokens.trim();
+        const tokens = trimmedTokens.startsWith('[')
+            ? JSON.parse(trimmedTokens)
+            : trimmedTokens.split(',').map(token => token.trim().replace(/^['"]|['"]$/g, ''));
         if (!Array.isArray(tokens) || tokens.length === 0 || tokens.some(token => !token)) {
             throw new Error('Token list is empty or invalid');
         }
