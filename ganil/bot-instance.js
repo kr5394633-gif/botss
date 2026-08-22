@@ -64,7 +64,7 @@ async function handleSyncMessage(message) {
         if (message.command === 'volume') {
             currentVolumeMultiplier = message.value / 100;
             if (activeResource && activeResource.volume) {
-                activeResource.volume.setVolume(currentVolumeMultiplier);
+                activeResource.volume.setVolume(getEffectiveVolume());
             }
         }
         if (message.command === 'blast') {
@@ -77,7 +77,7 @@ async function handleSyncMessage(message) {
         if (message.command === 'blastset') {
             blastVolume = message.value / 100;
             if (blastMode && activeResource && activeResource.volume) {
-                activeResource.volume.setVolume(blastVolume);
+                activeResource.volume.setVolume(getEffectiveVolume());
             }
         }
         if (message.command === 'pungi') {
@@ -90,7 +90,7 @@ async function handleSyncMessage(message) {
         if (message.command === 'pungiset') {
             pungiIntensity = message.value;
             if (pungiMode && activeResource && activeResource.volume) {
-                activeResource.volume.setVolume(Math.min(pungiIntensity, 100));
+                activeResource.volume.setVolume(getEffectiveVolume());
             }
         }
         return;
@@ -167,6 +167,11 @@ let blastVolume = 50.0;
 let pungiMode = false;
 let pungiIntensity = 100.0;
 let loopMode = false;
+
+function getEffectiveVolume() {
+    const modeMultiplier = blastMode ? blastVolume : (pungiMode ? pungiIntensity : 1);
+    return Math.min(currentVolumeMultiplier * modeMultiplier, 100);
+}
 
 // ─── UTILITY FUNCTIONS ───
 function isYouTubeUrl(url) {
@@ -260,8 +265,7 @@ async function createAudioResourceFromUrl(audioUrl, bassboosted, blast = false, 
         inlineVolume: true
     });
 
-    let vol = blastMode ? Math.min(blastVolume, 100.0) : (pungiMode ? Math.min(pungiIntensity, 100.0) : currentVolumeMultiplier);
-    resource.volume.setVolume(vol);
+    resource.volume.setVolume(getEffectiveVolume());
     return resource;
 }
 
