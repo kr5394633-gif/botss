@@ -139,7 +139,8 @@ async function getAudioUrl(url) {
                 dumpSingleJson: true,
                 noPlaylist: true,
                 format: 'bestaudio[ext=webm]/bestaudio/best',
-                noWarnings: true
+                noWarnings: true,
+                extractorArgs: 'youtube:player_client=android,web_safari'
             });
             console.log(`[BOT ${BOT_ID}] YouTube fetch success: ${result.title}`);
             return {
