@@ -36,9 +36,16 @@ function startSyncCoordinator() {
 }
 
 function getBotTokens() {
+    const numberedTokens = Object.keys(process.env)
+        .filter(name => /^BOT_TOKEN_\d+$/i.test(name))
+        .sort((first, second) => Number(first.match(/\d+$/)[0]) - Number(second.match(/\d+$/)[0]))
+        .map(name => process.env[name]);
     const configuredTokens = process.env.BOT_TOKENS || process.env.BOT_TOKEN;
+    if (!configuredTokens && numberedTokens.length > 0) {
+        return numberedTokens.filter(Boolean);
+    }
     if (!configuredTokens) {
-        throw new Error('Set BOT_TOKEN or BOT_TOKENS in Railway Variables');
+        throw new Error('Set BOT_TOKEN, BOT_TOKENS, or BOT_TOKEN_1, BOT_TOKEN_2, ... in Railway Variables');
     }
 
     try {
