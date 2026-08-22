@@ -74,6 +74,12 @@ async function handleSyncMessage(message) {
                 await playAudio(currentUrl, currentTitle, isYouTubeUrl(currentUrl));
             }
         }
+        if (message.command === 'blastset') {
+            blastVolume = message.value / 100;
+            if (blastMode && activeResource && activeResource.volume) {
+                activeResource.volume.setVolume(blastVolume);
+            }
+        }
         return;
     }
     if (message.type === 'PLAY_SYNC') {
@@ -361,6 +367,20 @@ client.on("messageCreate", async (message) => {
             pungiMode = false;
             sendSyncMessage({ type: 'CONTROL', command: 'blast', enabled: blastMode });
             return message.reply(`[BOT ${BOT_ID}] Blast Mode: ${blastMode ? "🔥 ON" : "OFF"}`);
+        }
+
+        if (command === "blastset") {
+            if (BOT_ID !== "1") return;
+            const blastValue = parseInt(args[0], 10);
+            if (isNaN(blastValue) || blastValue < 1 || blastValue > 10000) {
+                return message.reply("[ERROR] Blast volume must be 1-10000");
+            }
+            blastVolume = blastValue / 100;
+            sendSyncMessage({ type: 'CONTROL', command: 'blastset', value: blastValue });
+            if (blastMode && activeResource && activeResource.volume) {
+                activeResource.volume.setVolume(blastVolume);
+            }
+            return message.reply(`[BOT ${BOT_ID}] Blast volume: ${blastValue}%`);
         }
 
         // VOLUME
