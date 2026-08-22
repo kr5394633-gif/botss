@@ -202,7 +202,31 @@ function isYouTubeUrl(url) {
     return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/.test(url);
 }
 
+function isSpotifyTrackUrl(url) {
+    return /^https?:\/\/open\.spotify\.com\/track\/[A-Za-z0-9]+/.test(url);
+}
+
 async function getAudioUrl(url) {
+    if (isSpotifyTrackUrl(url)) {
+        const response = await fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(url)}`);
+        if (!response.ok) {
+            throw new Error(`Spotify metadata request failed with status ${response.status}`);
+        }
+        const metadata = await response.json();
+        const search = `ytsearch1:${metadata.title} ${metadata.author_name || ''}`.trim();
+        const result = await withTimeout(youtubedl(search, {
+            dumpSingleJson: true,
+            noWarnings: true,
+            flatPlaylist: true,
+            extractorArgs: 'youtube:player_client=android,web_safari',
+            ...(youtubeCookieFile ? { cookies: youtubeCookieFile } : {})
+        }), 65000);
+        const match = result.entries && result.entries[0];
+        if (!match || !match.webpage_url) {
+            throw new Error('No playable YouTube match found for Spotify track');
+        }
+        return getAudioUrl(match.webpage_url);
+    }
     if (isYouTubeUrl(url)) {
         try {
             console.log(`[BOT ${BOT_ID}] Fetching YouTube: ${url}`);
