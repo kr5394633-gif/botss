@@ -5,7 +5,7 @@ process.env.PATH = require('path').dirname(ffmpegStatic) + require('path').delim
 const net = require('net');
 const { Readable } = require('stream');
 const { Client, GatewayIntentBits, ChannelType } = require("discord.js");
-const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, StreamType, VoiceConnectionStatus } = require("@discordjs/voice");
+const { joinVoiceChannel, createAudioPlayer, createAudioResource, entersState, AudioPlayerStatus, StreamType, VoiceConnectionStatus } = require("@discordjs/voice");
 const { FFmpeg } = require("prism-media");
 const youtubedl = require("youtube-dl-exec");
 
@@ -74,7 +74,7 @@ async function handleSyncMessage(message) {
         console.log(`[BOT ${BOT_ID}] [SYNC] Will play in ${delay}ms`);
 
         setTimeout(() => {
-            if (pendingSyncPlay && currentConnection) {
+            if (pendingSyncPlay && currentConnection && currentConnection.state.status === VoiceConnectionStatus.Ready) {
                 console.log(`[BOT ${BOT_ID}] [SYNC] NOW PLAYING SYNCHRONIZED: ${pendingSyncPlay.title}`);
                 currentUrl = pendingSyncPlay.url;
                 currentTitle = pendingSyncPlay.title;
@@ -82,6 +82,8 @@ async function handleSyncMessage(message) {
                 audioPlayer.play(activeResource);
                 currentConnection.subscribe(audioPlayer);
                 pendingSyncPlay = null;
+            } else if (pendingSyncPlay) {
+                console.error(`[BOT ${BOT_ID}] [SYNC] Voice connection was not ready at playback time`);
             }
         }, delay);
     }
@@ -279,6 +281,14 @@ async function ensureVoiceConnection(channelId) {
     });
     attachConnectionEvents(currentConnection);
     currentChannelId = channel.id;
+    try {
+        await entersState(currentConnection, VoiceConnectionStatus.Ready, 30000);
+    } catch (error) {
+        currentConnection.destroy();
+        currentConnection = null;
+        currentChannelId = null;
+        throw new Error(`Voice connection failed: ${error.message}`);
+    }
 }
 
 // ─── EVENTS ───
