@@ -14,7 +14,14 @@ const youtubedl = require("youtube-dl-exec");
 let youtubeCookieFile = null;
 if (process.env.YOUTUBE_COOKIES_B64) {
     youtubeCookieFile = path.join(os.tmpdir(), `youtube-cookies-${process.pid}.txt`);
-    fs.writeFileSync(youtubeCookieFile, Buffer.from(process.env.YOUTUBE_COOKIES_B64, 'base64'), { mode: 0o600 });
+    const cookieBytes = Buffer.from(process.env.YOUTUBE_COOKIES_B64, 'base64');
+    let cookieText;
+    if (cookieBytes[0] === 0xff && cookieBytes[1] === 0xfe) {
+        cookieText = cookieBytes.subarray(2).toString('utf16le');
+    } else {
+        cookieText = cookieBytes.toString('utf8');
+    }
+    fs.writeFileSync(youtubeCookieFile, cookieText, { encoding: 'utf8', mode: 0o600 });
 }
 
 // ─── BOT TOKEN FROM ENVIRONMENT ───
