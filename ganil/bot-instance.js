@@ -348,6 +348,9 @@ client.on("messageCreate", async (message) => {
 
         // PLAY
         if (command === "play") {
+            if (BOT_ID !== "1") {
+                return;
+            }
             const audioUrl = args.join(" ");
             if (!audioUrl.startsWith('http')) {
                 return message.reply("[ERROR] Please provide a valid URL");
