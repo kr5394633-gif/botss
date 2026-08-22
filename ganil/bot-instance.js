@@ -23,7 +23,10 @@ function withTimeout(promise, milliseconds) {
 let youtubeCookieFile = null;
 if (process.env.YOUTUBE_COOKIES_B64) {
     youtubeCookieFile = path.join(os.tmpdir(), `youtube-cookies-${process.pid}.txt`);
-    const cookieBytes = Buffer.from(process.env.YOUTUBE_COOKIES_B64, 'base64');
+    const configuredCookies = process.env.YOUTUBE_COOKIES_B64.trim();
+    const cookieBytes = configuredCookies.startsWith('# Netscape')
+        ? Buffer.from(configuredCookies, 'utf8')
+        : Buffer.from(configuredCookies, 'base64');
     let cookieText;
     if (cookieBytes[0] === 0xff && cookieBytes[1] === 0xfe) {
         cookieText = cookieBytes.subarray(2).toString('utf16le');
