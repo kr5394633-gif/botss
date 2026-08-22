@@ -73,17 +73,21 @@ async function handleSyncMessage(message) {
         const delay = Math.max(0, message.startTime - Date.now());
         console.log(`[BOT ${BOT_ID}] [SYNC] Will play in ${delay}ms`);
 
-        setTimeout(() => {
-            if (pendingSyncPlay && currentConnection && currentConnection.state.status === VoiceConnectionStatus.Ready) {
+        setTimeout(async () => {
+            if (!pendingSyncPlay || !currentConnection) return;
+
+            try {
+                await entersState(currentConnection, VoiceConnectionStatus.Ready, 30000);
                 console.log(`[BOT ${BOT_ID}] [SYNC] NOW PLAYING SYNCHRONIZED: ${pendingSyncPlay.title}`);
                 currentUrl = pendingSyncPlay.url;
                 currentTitle = pendingSyncPlay.title;
                 activeResource = pendingSyncPlay.resource;
-                audioPlayer.play(activeResource);
                 currentConnection.subscribe(audioPlayer);
+                audioPlayer.play(activeResource);
                 pendingSyncPlay = null;
-            } else if (pendingSyncPlay) {
-                console.error(`[BOT ${BOT_ID}] [SYNC] Voice connection was not ready at playback time`);
+            } catch (error) {
+                console.error(`[BOT ${BOT_ID}] [SYNC] Playback failed: ${error.message}`);
+                pendingSyncPlay = null;
             }
         }, delay);
     }
